@@ -28,7 +28,7 @@ async fn run() {
     ));
 
     let token: Token<SignerMiddleware<Provider<Http>, _>> = Token::new(
-        Address::from_str("0x21cdbD4361A5944E4bE5B08723ecC5e2e38A9841").unwrap(),
+        Address::from_str("0x1cb3c56802dE282086581E47e07fd0c6aABC8d28").unwrap(),
         l2_signer.clone(),
     );
 
@@ -52,11 +52,34 @@ async fn run() {
         //Prepare balance
         let tx = token.transfer(wallet.address(), U256::from(10000)).legacy();
         let rt: Result<_, _> = tx.send().await;
-        match rt {
-            Ok(info) => println!("prepare success"),
-            Err(e) => println!("prepare fail: {:?}", e),
-        }
+        let pending_tx = match rt {
+            Ok(pending_tx) => pending_tx,
+            Err(e) => {
+                println!("prepare fail: {:?}", e);
+                continue;
+            }
+        };
         std::thread::sleep(Duration::from_secs(2));
+        let receipt = l2_provider
+            .get_transaction_receipt(pending_tx.tx_hash())
+            .await
+            .unwrap();
+        match receipt {
+            Some(receipt) => {
+                match receipt.status.unwrap().as_u64() {
+                    1 => println!("prepare success"),
+                    _ => {
+                        println!("prepare fail");
+                        continue;
+                    }
+                };
+            }
+            // Maybe still pending
+            None => {
+                println!("prepare pending");
+                // continue;
+            }
+        }
 
         let singer = Arc::new(SignerMiddleware::new(l2_provider.clone(), wallet));
         let token_ts: Token<SignerMiddleware<Provider<Http>, _>> = Token::new(
@@ -69,7 +92,7 @@ async fn run() {
     // token_vec.spl
     println!("current time: {:?}", SystemTime::now());
     println!(
-        "block_number_start:{:?}",
+        "==========>block_number_start:{:?}",
         l2_provider.get_block_number().await.unwrap()
     );
     for i in 1..200 {
