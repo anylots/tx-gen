@@ -16,7 +16,7 @@ async fn main() {
 }
 
 async fn run() {
-    let l2_provider: Provider<Http> = Provider::<Http>::try_from("http://127.0.0.1:8545").unwrap();
+    let l2_provider: Provider<Http> = Provider::<Http>::try_from("http://127.0.0.1:6688").unwrap();
     let chain_id = l2_provider.get_chainid().await.unwrap().as_u64();
     //1212121212121212121212121212121212121212121212121212121212121212
     //3e4bde571b86929bf08e2aaad9a6a1882664cd5e65b96fff7d03e1c4e6dfa15c
@@ -32,9 +32,14 @@ async fn run() {
         l2_signer.clone(),
     );
 
+    let count = l2_provider
+        .get_transaction_count("0x1C5A77d9FA7eF466951B2F01F724BCa3A5820b63", None)
+        .await;
+    println!("tx count: {:?}", count.unwrap());
+
     let mut token_vec = Vec::<Token<SignerMiddleware<Provider<Http>, _>>>::new();
     let mut i = 0;
-    while i < 20 {
+    while i < 10 {
         i += 1;
         let mut rng = rand::thread_rng();
         let wallet = Wallet::new(&mut rng).with_chain_id(chain_id);
@@ -42,16 +47,16 @@ async fn run() {
             .to(wallet.address())
             .value(1 * 10u64.pow(18));
         l2_signer.send_transaction(tx, None).await.unwrap();
-        std::thread::sleep(Duration::from_secs(5));
+        std::thread::sleep(Duration::from_secs(2));
 
         //Prepare balance
-        let tx = token.transfer(wallet.address(), U256::from(1)).legacy();
+        let tx = token.transfer(wallet.address(), U256::from(10000)).legacy();
         let rt: Result<_, _> = tx.send().await;
         match rt {
             Ok(info) => println!("prepare success"),
             Err(e) => println!("prepare fail: {:?}", e),
         }
-        std::thread::sleep(Duration::from_secs(5));
+        std::thread::sleep(Duration::from_secs(2));
 
         let singer = Arc::new(SignerMiddleware::new(l2_provider.clone(), wallet));
         let token_ts: Token<SignerMiddleware<Provider<Http>, _>> = Token::new(
