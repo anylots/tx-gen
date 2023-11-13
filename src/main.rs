@@ -1,3 +1,5 @@
+use dotenv::dotenv;
+use std::env::var;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -16,6 +18,9 @@ async fn main() {
 }
 
 async fn run() {
+    dotenv().ok();
+    let token_address = var("TOKEN_ADDRESS").expect("Cannot detect TOKEN_ADDRESS env var");
+
     let l2_provider: Provider<Http> = Provider::<Http>::try_from("http://127.0.0.1:6688").unwrap();
     let chain_id = l2_provider.get_chainid().await.unwrap().as_u64();
     //1212121212121212121212121212121212121212121212121212121212121212
@@ -28,17 +33,17 @@ async fn run() {
     ));
 
     let token: Token<SignerMiddleware<Provider<Http>, _>> = Token::new(
-        Address::from_str("0x1cb3c56802dE282086581E47e07fd0c6aABC8d28").unwrap(),
+        Address::from_str(token_address.as_str()).unwrap(),
         l2_signer.clone(),
     );
 
     let count = l2_provider
-        .get_transaction_count("0x1C5A77d9FA7eF466951B2F01F724BCa3A5820b63", None)
+        .get_transaction_count(l2_signer.address(), None)
         .await;
     println!("tx count: {:?}", count.unwrap());
 
     let mut token_vec = Vec::<Token<SignerMiddleware<Provider<Http>, _>>>::new();
-    let mut i = 0;
+    let mut i: i32 = 0;
     while i < 10 {
         i += 1;
         let mut rng = rand::thread_rng();
@@ -50,8 +55,8 @@ async fn run() {
         std::thread::sleep(Duration::from_secs(2));
 
         //Prepare balance
-        let tx = token.transfer(wallet.address(), U256::from(10000)).legacy();
-        let rt: Result<_, _> = tx.send().await;
+        let tx1 = token.transfer(wallet.address(), U256::from(10000)).legacy();
+        let rt: Result<_, _> = tx1.send().await;
         let pending_tx = match rt {
             Ok(pending_tx) => pending_tx,
             Err(e) => {
@@ -64,6 +69,7 @@ async fn run() {
             .get_transaction_receipt(pending_tx.tx_hash())
             .await
             .unwrap();
+
         match receipt {
             Some(receipt) => {
                 match receipt.status.unwrap().as_u64() {
@@ -81,9 +87,13 @@ async fn run() {
             }
         }
 
+        let balance = token.balance_of(wallet.address()).await.unwrap();
+        println!("balance: {:?}", balance);
+        assert!(balance == U256::from(10000), "Balance is not as expected");
+
         let singer = Arc::new(SignerMiddleware::new(l2_provider.clone(), wallet));
         let token_ts: Token<SignerMiddleware<Provider<Http>, _>> = Token::new(
-            Address::from_str("0xdF2A58b54F0fd57C1bfd8aCe2F58711d50B52A61").unwrap(),
+            Address::from_str(token_address.as_str()).unwrap(),
             singer,
         );
         token_vec.push(token_ts);
@@ -123,7 +133,7 @@ async fn run() {
         println!("===========epoch:{:?} complete", i);
     }
     println!(
-        "block_number_end:{:?}",
+        "==========>block_number_end:{:?}",
         l2_provider.get_block_number().await.unwrap()
     );
     println!("current time: {:?}", SystemTime::now());
