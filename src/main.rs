@@ -92,10 +92,8 @@ async fn run() {
         assert!(balance == U256::from(10000), "Balance is not as expected");
 
         let singer = Arc::new(SignerMiddleware::new(l2_provider.clone(), wallet));
-        let token_ts: Token<SignerMiddleware<Provider<Http>, _>> = Token::new(
-            Address::from_str(token_address.as_str()).unwrap(),
-            singer,
-        );
+        let token_ts: Token<SignerMiddleware<Provider<Http>, _>> =
+            Token::new(Address::from_str(token_address.as_str()).unwrap(), singer);
         token_vec.push(token_ts);
     }
 
@@ -130,7 +128,12 @@ async fn run() {
             println!("chunk start");
             std::thread::sleep(Duration::from_millis(500));
         }
-        println!("===========epoch:{:?} complete", i);
+
+        println!(
+            "===========epoch: {:?} complete, block_number: {:?}",
+            i,
+            l2_provider.get_block_number().await.unwrap()
+        );
     }
     println!(
         "==========>block_number_end:{:?}",
