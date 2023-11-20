@@ -20,14 +20,16 @@ async fn main() {
 async fn run() {
     dotenv().ok();
     let token_address = var("TOKEN_ADDRESS").expect("Cannot detect TOKEN_ADDRESS env var");
+    let private_key = var("PRIVATE_KEY").expect("Cannot detect TOKEN_ADDRESS env var");
+    let eth_rpc = var("ETH_RPC").expect("Cannot detect TOKEN_ADDRESS env var");
 
-    let l2_provider: Provider<Http> = Provider::<Http>::try_from("http://127.0.0.1:6688").unwrap();
+    let l2_provider: Provider<Http> = Provider::<Http>::try_from(eth_rpc.as_str()).unwrap();
     let chain_id = l2_provider.get_chainid().await.unwrap().as_u64();
     //1212121212121212121212121212121212121212121212121212121212121212
     //3e4bde571b86929bf08e2aaad9a6a1882664cd5e65b96fff7d03e1c4e6dfa15c
     let l2_signer = Arc::new(SignerMiddleware::new(
         l2_provider.clone(),
-        Wallet::from_str("1212121212121212121212121212121212121212121212121212121212121212")
+        Wallet::from_str(private_key.as_str())
             .unwrap()
             .with_chain_id(chain_id),
     ));
@@ -65,6 +67,11 @@ async fn run() {
             }
         };
         std::thread::sleep(Duration::from_secs(2));
+        println!(
+            "==========>Prepare balance block_number:{:?}",
+            l2_provider.get_block_number().await.unwrap()
+        );
+
         let receipt = l2_provider
             .get_transaction_receipt(pending_tx.tx_hash())
             .await
@@ -73,7 +80,7 @@ async fn run() {
         match receipt {
             Some(receipt) => {
                 match receipt.status.unwrap().as_u64() {
-                    1 => println!("prepare success"),
+                    1 => println!("prepare success:{:?}", receipt),
                     _ => {
                         println!("prepare fail");
                         continue;
@@ -98,11 +105,14 @@ async fn run() {
     }
 
     // token_vec.spl
+    println!("waiting for start erc20 tx");
+    std::thread::sleep(Duration::from_secs(10));
     println!("current time: {:?}", SystemTime::now());
     println!(
         "==========>block_number_start:{:?}",
         l2_provider.get_block_number().await.unwrap()
     );
+
     for i in 1..200 {
         for chunk in token_vec.chunks(2) {
             let mut handles: Vec<JoinHandle<()>> = Vec::new();
