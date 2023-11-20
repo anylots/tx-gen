@@ -1,11 +1,6 @@
 const { BigNumber } = require("ethers")
 const { ethers } = require('ethers');
-const Token_Artifact = require("../artifacts/contracts/Token.sol/Token.json");
-
-const overrides = {
-    gasLimit: 15000000,
-    gasPrice: 40 * 10 ** 9,
-};
+const Token_Artifact = require("../src/abi/Token.json");
 
 // This is a script for deploying your contracts. You can adapt it to deploy
 // yours, or create new ones.
@@ -20,7 +15,7 @@ async function main() {
     console.log("signer.address: " + signer.address);
 
 
-    ///deploy AleoToken
+    ///deploy ERC20 Token
     let TokenFactory = new ethers.ContractFactory(Token_Artifact.abi, Token_Artifact.bytecode, signer);
     const token = await TokenFactory.deploy(BigNumber.from(10 ** 12).mul(BigNumber.from(10 ** 6)));
     console.log("contract deploying...");

@@ -6,9 +6,7 @@ use std::sync::Arc;
 use ethers::prelude::*;
 use ethers::providers::{Http, Provider};
 use ethers::signers::Wallet;
-use ethers::types::Address;
-use std::time::{Duration, SystemTime};
-use tx_gen::abi::token_abi::Token;
+use std::time::Duration;
 
 #[tokio::main]
 async fn main() {
