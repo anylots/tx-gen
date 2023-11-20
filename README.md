@@ -1,4 +1,5 @@
 # TX-GEN
+EVM Transaction Generator
 
 ### build
 `cargo build --release`
