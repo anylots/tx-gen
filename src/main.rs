@@ -52,10 +52,11 @@ async fn run() {
     l2_signer.send_transaction(tx, None).await.unwrap();
     std::thread::sleep(Duration::from_secs(2));
 
-    let l2_signer1 =Arc::new(SignerMiddleware::new(
-        l2_provider.clone(),
-        wallet1,
-    ));
+    let tx1 = token.transfer(wallet1.address(), U256::from(100000)).legacy();
+    let rt: Result<_, _> = tx1.send().await;
+    std::thread::sleep(Duration::from_secs(2));
+
+    let l2_signer1 = Arc::new(SignerMiddleware::new(l2_provider.clone(), wallet1));
 
     let mut token_vec = Vec::<Token<SignerMiddleware<Provider<Http>, _>>>::new();
     let mut i: i32 = 0;
@@ -70,7 +71,7 @@ async fn run() {
         std::thread::sleep(Duration::from_secs(2));
 
         //Prepare balance
-        let tx1 = token.transfer(wallet.address(), U256::from(10000)).legacy();
+        let tx1 = token.transfer(wallet.address(), U256::from(1000)).legacy();
         let rt: Result<_, _> = tx1.send().await;
         let pending_tx = match rt {
             Ok(pending_tx) => pending_tx,
@@ -110,7 +111,7 @@ async fn run() {
 
         let balance = token.balance_of(wallet.address()).await.unwrap();
         println!("balance: {:?}", balance);
-        assert!(balance == U256::from(10000), "Balance is not as expected");
+        assert!(balance == U256::from(1000), "Balance is not as expected");
 
         let singer = Arc::new(SignerMiddleware::new(l2_provider.clone(), wallet));
         let token_ts: Token<SignerMiddleware<Provider<Http>, _>> =
