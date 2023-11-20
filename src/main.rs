@@ -44,16 +44,29 @@ async fn run() {
         .await;
     println!("tx count: {:?}", count.unwrap());
 
+    let mut rng: rand::prelude::ThreadRng = rand::thread_rng();
+    let wallet1 = Wallet::new(&mut rng).with_chain_id(chain_id);
+    let tx = TransactionRequest::new()
+        .to(wallet1.address())
+        .value(1 * 10u64.pow(18));
+    l2_signer.send_transaction(tx, None).await.unwrap();
+    std::thread::sleep(Duration::from_secs(2));
+
+    let l2_signer1 =Arc::new(SignerMiddleware::new(
+        l2_provider.clone(),
+        wallet1,
+    ));
+
     let mut token_vec = Vec::<Token<SignerMiddleware<Provider<Http>, _>>>::new();
     let mut i: i32 = 0;
     while i < 10 {
         i += 1;
-        let mut rng = rand::thread_rng();
+        let mut rng: rand::prelude::ThreadRng = rand::thread_rng();
         let wallet = Wallet::new(&mut rng).with_chain_id(chain_id);
         let tx = TransactionRequest::new()
             .to(wallet.address())
-            .value(1 * 10u64.pow(18));
-        l2_signer.send_transaction(tx, None).await.unwrap();
+            .value(1 * 10u64.pow(16));
+        l2_signer1.send_transaction(tx, None).await.unwrap();
         std::thread::sleep(Duration::from_secs(2));
 
         //Prepare balance
@@ -93,6 +106,7 @@ async fn run() {
                 // continue;
             }
         }
+        std::thread::sleep(Duration::from_millis(2000));
 
         let balance = token.balance_of(wallet.address()).await.unwrap();
         println!("balance: {:?}", balance);
