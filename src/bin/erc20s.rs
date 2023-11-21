@@ -1,4 +1,5 @@
 use dotenv::dotenv;
+use env_logger::Env;
 use std::env::var;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -13,6 +14,8 @@ use tx_gen::abi::token_abi::Token;
 
 #[tokio::main]
 async fn main() {
+    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
+
     run().await;
     println!("tx complete");
 }
