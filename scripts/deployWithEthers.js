@@ -7,9 +7,9 @@ const Token_Artifact = require("../src/abi/Token.json");
 async function main() {
 
     ///prepare deployer
-    let privateKey = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    let privateKey = "1212121212121212121212121212121212121212121212121212121212121212";
     let customHttpProvider = new ethers.providers.JsonRpcProvider(
-        "http://localhost:8545"
+        "http://localhost:6688"
     );
     const signer = new ethers.Wallet(privateKey, customHttpProvider);
     console.log("signer.address: " + signer.address);
