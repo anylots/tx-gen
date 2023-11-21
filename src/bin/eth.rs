@@ -16,8 +16,8 @@ async fn main() {
 
 async fn run() {
     dotenv().ok();
-    let private_key = var("PRIVATE_KEY").expect("Cannot detect TOKEN_ADDRESS env var");
-    let eth_rpc = var("ETH_RPC").expect("Cannot detect TOKEN_ADDRESS env var");
+    let private_key = var("PRIVATE_KEY").expect("Cannot detect PRIVATE_KEY env var");
+    let eth_rpc = var("ETH_RPC").expect("Cannot detect ETH_RPC env var");
 
     let l2_provider: Provider<Http> = Provider::<Http>::try_from(eth_rpc.as_str()).unwrap();
     let chain_id = l2_provider.get_chainid().await.unwrap().as_u64();
@@ -27,6 +27,9 @@ async fn run() {
         l2_provider.clone(),
         Wallet::from_str(private_key.as_str()).unwrap().with_chain_id(chain_id),
     ));
+
+    let signer_balance = l2_provider.get_balance(l2_signer.address(), None).await.unwrap();
+    log::info!("signer_eth_balance: {:#?}", signer_balance);
 
     let count = l2_provider.get_transaction_count(l2_signer.address(), None).await;
     println!("tx count: {:?}", count.unwrap());
