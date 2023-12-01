@@ -34,6 +34,8 @@ async fn run() {
 
     let count = l2_provider.get_transaction_count(l2_signer.address(), None).await;
     println!("tx count: {:?}", count.unwrap());
+    let l2_signer_balance = l2_provider.get_balance(l2_signer.address(), None).await.unwrap();
+    log::info!("l2_signer balance: {:#?}", l2_signer_balance);
 
     //0x1f68c776FBe7285eBe02111F0A982D1640b0a483
     let target_wallet = Wallet::from_str(target_private_key.as_str()).unwrap();
@@ -41,7 +43,7 @@ async fn run() {
         .to(target_wallet.address())
         .value(10 * 10u64.pow(18));
     l2_signer.send_transaction(tx, None).await.unwrap();
-    std::thread::sleep(Duration::from_secs(10));
+    std::thread::sleep(Duration::from_secs(16));
     let balance = l2_provider.get_balance(target_wallet.address(), None).await.unwrap();
     log::info!("eth balance: {:#?}", balance);
     assert!(balance == U256::from(10u64.pow(18)), "Balance is not as expected");
