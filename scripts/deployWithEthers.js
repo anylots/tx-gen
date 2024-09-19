@@ -1,13 +1,14 @@
 const { BigNumber } = require("ethers")
 const { ethers } = require('ethers');
 const Token_Artifact = require("../src/abi/Token.json");
+require("dotenv").config({ path: ".env" });
 
 // This is a script for deploying your contracts. You can adapt it to deploy
 // yours, or create new ones.
 async function main() {
 
     ///prepare deployer
-    let privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    let privateKey = requireEnv("PRIVATE_KEY");
     let customHttpProvider = new ethers.providers.JsonRpcProvider(
         "http://localhost:8545"
     );
@@ -22,6 +23,20 @@ async function main() {
 
     await token.deployed();
     console.log("token address:", token.address);
+}
+
+/**
+ * Load environment variables 
+ * 
+ * @param {*} entry 
+ * @returns 
+ */
+function requireEnv(entry) {
+    if (process.env[entry]) {
+        return process.env[entry]
+    } else {
+        throw new Error(`${entry} not defined in .env`)
+    }
 }
 
 main()
