@@ -25,10 +25,13 @@ async function main() {
     console.log("gasLimit: " + gasLimit);
 
     console.log("current blockNumber: " + await customHttpProvider.getBlockNumber());
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 1000; i++) {
         try {
 
-            const tx = await token.transfer("0x70997970C51812dc3A010C7d01b50e0d17dc79C8", 1, {
+            const randomWallet = ethers.Wallet.createRandom();
+            const address = randomWallet.address;
+
+            const tx = await token.transfer(address, 1, {
                 nonce: nonce + i,
                 gasLimit: gasLimit,
                 maxPriorityFeePerGas: ethers.utils.parseUnits("1", "gwei"),
