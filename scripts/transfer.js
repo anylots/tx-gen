@@ -25,11 +25,12 @@ async function main() {
     console.log("gasLimit: " + gasLimit);
 
     console.log("current blockNumber: " + await customHttpProvider.getBlockNumber());
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 100; i++) {
         try {
 
             const randomWallet = ethers.Wallet.createRandom();
             const address = randomWallet.address;
+            console.log("randomWallet.address: " + address);
 
             const tx = await token.transfer(address, 1, {
                 nonce: nonce + i,
@@ -48,7 +49,7 @@ async function main() {
             console.error(`Error in transaction ${i + 1}:`, error);
         }
 
-        await new Promise(resolve => setTimeout(resolve, 20));
+        await new Promise(resolve => setTimeout(resolve, 100000));
     }
     console.log("current blockNumber: " + await customHttpProvider.getBlockNumber());
 }
